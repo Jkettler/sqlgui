@@ -43,7 +43,32 @@ router.post("/register", async (req, res, next) => {
     return next(Boom.badImplementation("Unable to create user."));
   }
 
-  res.send("OK");
+  const jwToken = user.generateAuthToken();
+
+  // expires after 15 minutes
+  const jwTokenExpiry = new Date(new Date().getTime() + 15 * 60 * 1000);
+
+  let refreshToken;
+  try {
+    refreshToken = createNewForUser(user);
+  } catch (e) {
+    console.error(e);
+    return next(
+      Boom.badImplementation("Could not update refresh token for user")
+    );
+  }
+
+  res.cookie("refreshToken", refreshToken.refresh_token, {
+    maxAge: 60 * 24 * 30 * 60 * 1000, // convert from minute to milliseconds
+    httpOnly: true,
+    secure: false,
+  });
+
+  // return jwt token and refresh token to client
+  res.json({
+    jwToken,
+    jwTokenExpiry,
+  });
 });
 
 router.post("/logout", auth, async (req, res, next) => {

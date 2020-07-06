@@ -26,31 +26,29 @@ const App = (props) => {
 
   const [results, setResults] = useState(null);
 
-  const [currentQueryData, setCurrentQueryData] = useState({
+  const [activeQuery, setActiveQuery] = useState({
     query: "",
     name: "",
   });
 
   const [savedQueries, setSavedQueries] = useState([]);
-  const [selectedQIdx, setSelectedQIdx] = useState(null);
+  const [localQueries, setLocalQueries] = useState([]);
 
   const apiUrl = "http://localhost:9000";
   const queryUrl = `${apiUrl}/api/query`;
 
   useEffect(() => {
-    const qData = savedQueries[selectedQIdx];
-
-    if (qData) {
-      setCurrentQueryData(qData);
+    if (user) {
+      setSavedQueries(user.queries);
     }
-  }, [selectedQIdx, savedQueries]);
+  }, [user]);
 
-  function queryServer() {
+  const executeQuery = () => {
     setResults(null);
     setQueryError(null);
     axios
       .post(queryUrl, {
-        query: currentQueryData.query,
+        query: activeQuery.query,
       })
       .then((res) => {
         const {
@@ -63,7 +61,7 @@ const App = (props) => {
       .catch((e) => {
         setNetworkError(e);
       });
-  }
+  };
 
   axios.interceptors.request.use(
     (config) => {
@@ -80,27 +78,18 @@ const App = (props) => {
     }
   );
 
-  function selectSavedQuery(e) {
-    setSelectedQIdx(e.target.value);
-  }
-
-  const updateQuery = (e) => {
-    const {
-      target: { value },
-    } = e;
-    setCurrentQueryData({ ...currentQueryData, query: value });
+  const onActiveQueryChange = (e) => {
+    const { name, value } = e.target;
+    setActiveQuery((inputs) => ({ ...inputs, [name]: value }));
   };
 
-  const updateQueryName = (e) => {
-    const {
-      target: { value },
-    } = e;
-    setCurrentQueryData({ ...currentQueryData, name: value });
+  const reloadPage = () => {
+    window.location.reload();
   };
 
   return (
     <div className="App">
-      <Container className={"MainContainer"} fluid="lg">
+      <Container className={"MainContainer"} fluid="xl">
         <Jumbotron>
           <Container>
             <h1>Learn You a SQL For Great Good</h1>
@@ -108,16 +97,7 @@ const App = (props) => {
           </Container>
           {user ? (
             <ButtonGroup>
-              <Button
-                onClick={() =>
-                  logout().then(() => {
-                    setJwt(null);
-                    setUser(null);
-                  })
-                }
-              >
-                logout
-              </Button>
+              <Button onClick={() => logout().then(reloadPage)}>logout</Button>
             </ButtonGroup>
           ) : (
             <AuthModal
@@ -128,33 +108,36 @@ const App = (props) => {
           )}
         </Jumbotron>
         <Row>
-          {savedQueries.length > 0 && (
+          {(!!localQueries.length || !!savedQueries.length) && (
             <SavedQueryList
+              setActiveQuery={setActiveQuery}
+              localQueries={localQueries}
+              setLocalQueries={setLocalQueries}
               savedQueries={savedQueries}
-              onClick={selectSavedQuery}
+              setSavedQueries={setSavedQueries}
             />
           )}
+
           <Col>
             <Form.Group>
               <InputGroup>
                 <FormControl
                   type="text"
+                  name="name"
                   placeholder="Query Name"
-                  value={currentQueryData.name}
-                  onChange={updateQueryName}
+                  value={activeQuery.name}
+                  onChange={onActiveQueryChange}
                 />
                 <InputGroup.Append>
                   <Button
                     disabled={
-                      !currentQueryData.name.length ||
-                      !currentQueryData.query.length
+                      !activeQuery.name.length || !activeQuery.query.length
                     }
                     onClick={() =>
-                      setSavedQueries((qrs) =>
+                      setLocalQueries((qrs) =>
                         qrs.concat({
-                          name: currentQueryData.name,
-                          query: currentQueryData.query,
-                          _id: null,
+                          name: activeQuery.name,
+                          query: activeQuery.query,
                         })
                       )
                     }
@@ -169,16 +152,17 @@ const App = (props) => {
               <FormControl
                 as="textarea"
                 size="lg"
-                value={currentQueryData.query || ""}
+                name="query"
+                value={activeQuery.query || ""}
                 placeholder="Enter a SQLite Query"
-                onChange={updateQuery}
+                onChange={onActiveQueryChange}
               />
             </InputGroup>
             <Form.Group>
               <ButtonGroup>
                 <Button
-                  disabled={!currentQueryData.query.length}
-                  onClick={queryServer}
+                  disabled={!activeQuery.query.length}
+                  onClick={executeQuery}
                 >
                   Execute Query
                 </Button>

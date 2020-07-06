@@ -35,10 +35,14 @@ const AuthModal = ({ setUser, setJwt }) => {
 
   const auth = async (name, password, urlAction) => {
     return axios
-      .post(`${apiUrl}/${urlAction}`, {
-        name,
-        password,
-      })
+      .post(
+        `${apiUrl}/${urlAction}`,
+        {
+          name,
+          password,
+        },
+        { withCredentials: true }
+      )
       .then((res) => {
         if (urlAction === "register") {
           auth(userData.name, userData.password, "login").then(

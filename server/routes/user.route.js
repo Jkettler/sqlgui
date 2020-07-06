@@ -1,11 +1,12 @@
-const { User } = require("../models/user.model");
+const { User, populate } = require("../models/user.model");
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
 router.get("/current", auth, async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
-  res.send(user);
+  await User.findById(req.user._id, [], [], (err, user) =>
+    populate(err, user, res)
+  );
 });
 
 module.exports = router;

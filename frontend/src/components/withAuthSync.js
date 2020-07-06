@@ -62,7 +62,7 @@ const withAuthSync = (WrappedComponent) => ({ ...props }) => {
 
     // window.addEventListener("storage", this.syncLogout);
     return () => clearInterval(interval);
-  }, []);
+  }, [jwt]);
 
   return (
     <WrappedComponent

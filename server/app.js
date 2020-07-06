@@ -36,7 +36,10 @@ initSqlJs()
 // app.set("view engine", "pug");
 
 mongoose
-  .connect("mongodb://localhost/sqlgui", { useNewUrlParser: true })
+  .connect("mongodb://localhost/sqlgui", {
+    useFindAndModify: false,
+    useNewUrlParser: true,
+  })
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB..."));
 
@@ -53,10 +56,12 @@ app.use(express.static(path.join(__dirname, "public")));
 var query = require("./routes/query.route");
 var auth = require("./routes/auth.route");
 var users = require("./routes/user.route");
+var queries = require("./routes/user_queries.route");
 
 app.use("/api", query);
 app.use("/", auth);
 app.use("/api/users", users);
+app.use("/api/user_queries", queries);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -27,6 +27,14 @@ UserSchema.methods.generateAuthToken = function () {
 
 const User = mongoose.model("User", UserSchema);
 
+function populateCallback(err, user, res) {
+  const opts = [{ path: "queries", select: "name query" }];
+
+  return User.populate(user, opts, (err, user) => {
+    res.send(user);
+  });
+}
+
 function validateUser(user) {
   const schema = Joi.object().keys({
     name: Joi.string().min(3).max(50).required(),
@@ -37,3 +45,4 @@ function validateUser(user) {
 
 exports.User = User;
 exports.validate = validateUser;
+exports.populate = populateCallback;
