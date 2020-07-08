@@ -7,12 +7,11 @@ const { UserQuery } = require("../models/user_query.model");
 router.post("/sync", auth, async (req, res) => {
   const {
     user: { _id: id },
+    body,
   } = req;
 
   if (id) {
-    const queries = req.body
-      .filter((q) => !q._id)
-      .map((q) => ({ ...q, user: id }));
+    const queries = body.filter((q) => !q._id).map((q) => ({ ...q, user: id }));
     const models = await UserQuery.insertMany(queries);
 
     await User.findByIdAndUpdate(
@@ -24,20 +23,20 @@ router.post("/sync", auth, async (req, res) => {
   }
 });
 
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/delete", auth, async (req, res) => {
   const {
     user: { _id: id },
-    params: { id: queryId },
+    body: deleteIds,
   } = req;
 
-  if (id && queryId) {
-    let uQuery = await UserQuery.findOneAndDelete(queryId);
-    await User.findByIdAndUpdate(
-      id,
-      { $pull: { queries: queryId } },
-      { new: true, select: "-password" },
-      (err, usr) => populate(err, usr, res)
-    );
+  if (id && deleteIds.length) {
+    await UserQuery.deleteMany({
+      user: id,
+      _id: {
+        $in: deleteIds,
+      },
+    });
+    await User.findById(id, [], [], (err, user) => populate(err, user, res));
   }
 });
 

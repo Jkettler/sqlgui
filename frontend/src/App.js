@@ -1,8 +1,6 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
-import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Button from "react-bootstrap/Button";
 import FormControl from "react-bootstrap/FormControl";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
@@ -15,41 +13,34 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import AuthModal from "./components/AuthModal";
 import SavedQueryList from "./components/SavedQueryList";
-import { withAuthSync, logout } from "./components/withAuthSync";
+import { withAuthSync } from "./HOCs/withAuthSync";
+import NoFocusButton from "./components/NoFocusButton";
+import queryService from "./util/queryService";
 
 const App = (props) => {
-  const { jwt, setJwt, user, setUser, logout } = props;
+  const { user, login, logout, jwt } = props;
+
   const [queryError, setQueryError] = useState(null);
-
   const [networkError, setNetworkError] = useState(null);
-  const [loginError, setLoginError] = useState(null);
-
   const [results, setResults] = useState(null);
 
-  const [activeQuery, setActiveQuery] = useState({
-    query: "",
-    name: "",
-  });
-
+  const [activeQuery, setActiveQuery] = useState({ query: "", name: "" });
   const [savedQueries, setSavedQueries] = useState([]);
   const [localQueries, setLocalQueries] = useState([]);
-
-  const apiUrl = "http://localhost:9000";
-  const queryUrl = `${apiUrl}/api/query`;
 
   useEffect(() => {
     if (user) {
       setSavedQueries(user.queries);
+    } else {
+      setSavedQueries([]);
     }
   }, [user]);
 
   const executeQuery = () => {
     setResults(null);
     setQueryError(null);
-    axios
-      .post(queryUrl, {
-        query: activeQuery.query,
-      })
+    queryService.query
+      .execute(activeQuery)
       .then((res) => {
         const {
           data: { results, error },
@@ -63,28 +54,28 @@ const App = (props) => {
       });
   };
 
-  axios.interceptors.request.use(
-    (config) => {
-      const { origin } = new URL(config.url);
-      const allowedOrigins = [apiUrl];
-
-      if (jwt && allowedOrigins.includes(origin)) {
-        config.headers.authorization = `Bearer ${jwt.jwToken}`;
-      }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
-
   const onActiveQueryChange = (e) => {
     const { name, value } = e.target;
     setActiveQuery((inputs) => ({ ...inputs, [name]: value }));
   };
 
-  const reloadPage = () => {
-    window.location.reload();
+  const clearQuery = () => {
+    setActiveQuery({ query: "", name: "" });
+  };
+
+  const addOrUpdateLocalQuery = () => {
+    const existing = savedQueries
+      .concat(localQueries)
+      .findIndex((q) => q.name.trim() === activeQuery.name.trim());
+
+    if (existing < 0) {
+      setLocalQueries((qrs) =>
+        qrs.concat({
+          name: activeQuery.name,
+          query: activeQuery.query,
+        })
+      );
+    }
   };
 
   return (
@@ -96,15 +87,9 @@ const App = (props) => {
             {user && <h3>{`Welcome back ${user.name}!`}</h3>}
           </Container>
           {user ? (
-            <ButtonGroup>
-              <Button onClick={() => logout().then(reloadPage)}>logout</Button>
-            </ButtonGroup>
+            <NoFocusButton onClick={logout}>Logout</NoFocusButton>
           ) : (
-            <AuthModal
-              buttonTitle="Login To Save Your Work"
-              setUser={setUser}
-              setJwt={setJwt}
-            />
+            <AuthModal login={login} />
           )}
         </Jumbotron>
         <Row>
@@ -115,6 +100,8 @@ const App = (props) => {
               setLocalQueries={setLocalQueries}
               savedQueries={savedQueries}
               setSavedQueries={setSavedQueries}
+              jwt={jwt}
+              user={user}
             />
           )}
 
@@ -122,6 +109,7 @@ const App = (props) => {
             <Form.Group>
               <InputGroup>
                 <FormControl
+                  autoComplete="off"
                   type="text"
                   name="name"
                   placeholder="Query Name"
@@ -129,21 +117,14 @@ const App = (props) => {
                   onChange={onActiveQueryChange}
                 />
                 <InputGroup.Append>
-                  <Button
+                  <NoFocusButton
                     disabled={
                       !activeQuery.name.length || !activeQuery.query.length
                     }
-                    onClick={() =>
-                      setLocalQueries((qrs) =>
-                        qrs.concat({
-                          name: activeQuery.name,
-                          query: activeQuery.query,
-                        })
-                      )
-                    }
+                    onClick={addOrUpdateLocalQuery}
                   >
                     +
-                  </Button>
+                  </NoFocusButton>
                 </InputGroup.Append>
               </InputGroup>
             </Form.Group>
@@ -160,12 +141,15 @@ const App = (props) => {
             </InputGroup>
             <Form.Group>
               <ButtonGroup>
-                <Button
+                <NoFocusButton
                   disabled={!activeQuery.query.length}
                   onClick={executeQuery}
                 >
                   Execute Query
-                </Button>
+                </NoFocusButton>
+                <NoFocusButton variant="warning" onClick={clearQuery}>
+                  Clear
+                </NoFocusButton>
               </ButtonGroup>
             </Form.Group>
 
@@ -177,6 +161,17 @@ const App = (props) => {
                   variant="danger"
                 >
                   <span>{`${queryError}`}</span>
+                </Alert>
+              </Form.Group>
+            )}
+            {networkError && (
+              <Form.Group>
+                <Alert
+                  dismissible
+                  onClose={() => setNetworkError(null)}
+                  variant="danger"
+                >
+                  <span>{`${networkError}`}</span>
                 </Alert>
               </Form.Group>
             )}

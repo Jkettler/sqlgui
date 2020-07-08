@@ -1,18 +1,17 @@
-var express = require("express");
-var path = require("path");
-var favicon = require("serve-favicon");
-var logger = require("morgan");
-var cookieParser = require("cookie-parser");
-var bodyParser = require("body-parser");
-var fs = require("fs");
-var initSqlJs = require("sql.js");
-var filebuffer = fs.readFileSync("../db/chinook.db");
-var cors = require("cors");
+const express = require("express");
+const path = require("path");
+const favicon = require("serve-favicon");
+const logger = require("morgan");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const fs = require("fs");
+const initSqlJs = require("sql.js");
+const filebuffer = fs.readFileSync("../db/chinook.db");
+const cors = require("cors");
 const config = require("config");
 const mongoose = require("mongoose");
-const usersRoute = require("./routes/user.route");
 
-var app = express();
+const app = express();
 
 const helmet = require("helmet");
 app.use(helmet());
@@ -31,10 +30,6 @@ initSqlJs()
     app.locals.dbLoadError = e;
   });
 
-// view engine setup
-// app.set("views", path.join(__dirname, "views"));
-// app.set("view engine", "pug");
-
 mongoose
   .connect("mongodb://localhost/sqlgui", {
     useFindAndModify: false,
@@ -47,20 +42,20 @@ app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger("dev"));
+// app.use(logger("dev"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+// app.use(express.static(path.join(__dirname, "public")));
 
-var query = require("./routes/query.route");
-var auth = require("./routes/auth.route");
-var users = require("./routes/user.route");
-var queries = require("./routes/user_queries.route");
+const query = require("./routes/query.route");
+const auth = require("./routes/auth.route");
+const user = require("./routes/user.route");
+const queries = require("./routes/user_queries.route");
 
-app.use("/api", query);
 app.use("/", auth);
-app.use("/api/users", users);
+app.use("/user", user);
+app.use("/api", query);
 app.use("/api/user_queries", queries);
 
 // catch 404 and forward to error handler

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
@@ -6,10 +6,9 @@ import Container from "react-bootstrap/Container";
 import Alert from "react-bootstrap/Alert";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
-import axios from "axios";
-import { getAndSetUser } from "./withAuthSync";
+import authService from "../util/userService";
 
-const AuthModal = ({ setUser, setJwt }) => {
+const AuthModal = ({ login }) => {
   const [userData, setUserData] = useState({
     name: "",
     password: "",
@@ -17,7 +16,6 @@ const AuthModal = ({ setUser, setJwt }) => {
   });
 
   const [formAction, setFormAction] = useState("login");
-  const apiUrl = "http://localhost:9000";
   const [loggingIn, setLoggingIn] = useState(false);
 
   const [show, setShow] = useState(false);
@@ -28,65 +26,70 @@ const AuthModal = ({ setUser, setJwt }) => {
   const { name, password } = userData;
   const [submitted, setSubmitted] = useState(false);
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData((inputs) => ({ ...inputs, [name]: value }));
-  }
-
-  const auth = async (name, password, urlAction) => {
-    return axios
-      .post(
-        `${apiUrl}/${urlAction}`,
-        {
-          name,
-          password,
-        },
-        { withCredentials: true }
-      )
-      .then((res) => {
-        if (urlAction === "register") {
-          auth(userData.name, userData.password, "login").then(
-            (res) => res.data
-          );
-        }
-        return res.data;
-      });
   };
 
-  function handleSubmit(e) {
+  const showErrors = (err) => {
+    if (err.response) {
+      const {
+        output: {
+          payload: { message },
+        },
+      } = err.response.data;
+
+      setUserData({
+        ...userData,
+        error: message,
+      });
+    } else {
+      setUserData({
+        ...userData,
+        error: err,
+      });
+    }
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoggingIn(true);
     setSubmitted(true);
 
-    if (name && password) {
-      auth(userData.name, userData.password, formAction)
+    if (formAction === "login") {
+      authService.auth
+        .userLogin({
+          name,
+          password,
+        })
         .then((res) => {
-          setJwt(res);
-          getAndSetUser(setUser);
+          login(res.data);
           return res;
         })
-        .catch((e) => {
-          if (e.response) {
-            const {
-              output: {
-                payload: { message },
-              },
-            } = e.response.data;
-
-            setUserData({
-              ...userData,
-              error: message,
-            });
-          } else {
-            setUserData({
-              ...userData,
-              error: e,
-            });
-          }
+        .catch((err) => {
+          showErrors(err);
+        })
+        .then(() => {
+          setLoggingIn(false);
+        });
+    } else if (formAction === "register") {
+      authService.auth
+        .userRegister({
+          name,
+          password,
+        })
+        .then((res) => {
+          login(res.data);
+          return res;
+        })
+        .catch((err) => {
+          showErrors(err);
+        })
+        .then(() => {
+          setLoggingIn(false);
         });
     }
-    setLoggingIn(false);
-  }
+  };
 
   const authOptions = [
     { name: "Login", value: "login" },
@@ -117,12 +120,12 @@ const AuthModal = ({ setUser, setJwt }) => {
             </ToggleButton>
           ))}
         </ButtonGroup>
+
         <Container fluid>
           <Modal.Dialog>
             <Modal.Header closeButton>
               <Modal.Title>{modalTitle}</Modal.Title>
             </Modal.Header>
-
             <Modal.Body>
               <Form onSubmit={handleSubmit}>
                 <Form.Group controlId="formBasicUsername">

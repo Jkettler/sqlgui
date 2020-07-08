@@ -61,7 +61,7 @@ router.post("/register", async (req, res, next) => {
   res.cookie("refreshToken", refreshToken.refresh_token, {
     maxAge: 60 * 24 * 30 * 60 * 1000, // convert from minute to milliseconds
     httpOnly: true,
-    secure: false,
+    secure: true,
   });
 
   // return jwt token and refresh token to client
@@ -122,7 +122,7 @@ router.post("/login", async (req, res, next) => {
   res.cookie("refreshToken", refreshToken.refresh_token, {
     maxAge: 60 * 24 * 30 * 60 * 1000, // convert from minute to milliseconds
     httpOnly: true,
-    secure: false,
+    secure: true,
   });
 
   // return jwt token and refresh token to client
@@ -160,7 +160,7 @@ router.post("/refresh-token", async (req, res, next) => {
   res.cookie("refreshToken", refreshToken.refresh_token, {
     maxAge: 60 * 24 * 30 * 60 * 1000,
     httpOnly: true,
-    secure: false,
+    secure: true,
   });
 
   res.json({
