@@ -9,7 +9,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 
-import authService from "../util/userService";
+import authService from "../util/authService";
 import { JwtProvider, useJwt } from "../contexts/JwtContext";
 import NoFocusButton from "./NoFocusButton";
 

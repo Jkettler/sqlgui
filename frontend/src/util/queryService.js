@@ -8,15 +8,15 @@ const queryClient = axios.create({
 export default {
   query: {
     execute(payload) {
-      return queryClient.post("/api/query/", payload);
+      return queryClient.post("/query/", payload);
     },
     sync(payload, jwt) {
-      return queryClient.post("/api/user_queries/sync/", payload, {
+      return queryClient.post("/user/queries/sync/", payload, {
         headers: { Authorization: `Bearer ${jwt}` },
       });
     },
     delete(payload, jwt) {
-      return queryClient.delete("/api/user_queries/delete/", {
+      return queryClient.delete("/user/queries/delete/", {
         data: payload,
         headers: { Authorization: `Bearer ${jwt}` },
       });

@@ -3,7 +3,7 @@ import { useUser } from "../contexts/UserContext";
 import { useJwt } from "../contexts/JwtContext";
 
 import { subMinutes } from "../util/sharedStaticHelpers";
-import userService from "../util/userService";
+import userService from "../util/authService";
 
 const withAuthSync = (WrappedComponent) => ({ ...props }) => {
   const { jwt, setJwt } = useJwt();

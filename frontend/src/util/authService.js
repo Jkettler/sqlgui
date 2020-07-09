@@ -9,17 +9,17 @@ export default {
   auth: {
     userLogin(payload, callback) {
       return authClient
-        .post("/login/", payload, { withCredentials: true })
+        .post("/auth/login/", payload, { withCredentials: true })
         .then((res) => callback(res.data));
     },
     userRegister(payload, callback) {
       return authClient
-        .post("/register/", payload, { withCredentials: true })
+        .post("/auth/register/", payload, { withCredentials: true })
         .then((res) => callback(res.data));
     },
     userLogout(jwt) {
       return authClient.post(
-        "/logout/",
+        "/auth/logout/",
         {},
         {
           withCredentials: true,
@@ -35,7 +35,7 @@ export default {
     refreshToken(callback, interval) {
       return authClient
         .post(
-          "/refresh-token/",
+          "/auth/refresh-token/",
           {},
           {
             withCredentials: true,

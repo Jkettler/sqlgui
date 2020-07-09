@@ -49,12 +49,12 @@ app.use(cookieParser());
 const query = require("./routes/query.route");
 const auth = require("./routes/auth.route");
 const user = require("./routes/user.route");
-const userQueries = require("./routes/user_queries.route");
+// const userQueries = require("./routes/user_queries.route");
 
-app.use("/", auth);
-app.use("/user", user);
-app.use("/api", query);
-app.use("/api/user_queries", userQueries);
+app.use("/api/auth", auth);
+app.use("/api/user", user);
+app.use("/api/query", query);
+// app.use("/api/user_queries", userQueries);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -69,9 +69,12 @@ app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  const {
-    output: { statusCode = "401" },
-  } = err;
+  // handle @hapi/boom errors if present
+  let statusCode;
+  if (err && err.output) {
+    ({ statusCode = "401" } = err);
+  }
+
   res.status(err.status || statusCode);
   res.send(err);
 });

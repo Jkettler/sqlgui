@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-router.post("/query", function (req, res, next) {
+router.post("/", function (req, res, next) {
   const {
     app: {
       locals: { database },
