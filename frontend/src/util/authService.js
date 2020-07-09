@@ -1,8 +1,8 @@
 import axios from "axios";
-import { SERVER_URL } from "./constants";
+import { SERVER_URL, PROD_SERVER_URL } from "./constants";
 
 const authClient = axios.create({
-  baseURL: SERVER_URL,
+  baseURL: PROD_SERVER_URL,
 });
 
 export default {

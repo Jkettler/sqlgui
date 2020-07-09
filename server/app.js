@@ -39,7 +39,8 @@ mongoose
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB..."));
 
-const origin = process.env.ENV === "prod" ? "originProd" : "originDev";
+const origin =
+  process.env.NODE_ENV === "production" ? "originProd" : "originDev";
 
 app.use(cors({ credentials: true, origin: config.get(origin) }));
 
