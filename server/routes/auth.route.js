@@ -3,11 +3,13 @@ const router = express.Router();
 const Boom = require("@hapi/boom");
 const bcrypt = require("bcrypt");
 const auth = require("../middleware/auth");
+const config = require("config");
 
 const {
   RefreshToken,
   createNewForUser,
 } = require("../models/refresh_token.model");
+
 const { User, validate } = require("../models/user.model");
 
 router.post("/register", async (req, res, next) => {
@@ -21,13 +23,14 @@ router.post("/register", async (req, res, next) => {
 
   let existing_user = await User.findOne({ name: name });
   if (existing_user)
-    return next(Boom.preconditionFailed("Username already exists"));
+    return next(
+      Boom.preconditionFailed("A user with that name already exists")
+    );
 
   try {
     await bcrypt.hash(password, 10);
   } catch (e) {
-    console.error(e);
-    return next(Boom.badImplementation("Unable to generate 'password hash'"));
+    return next(Boom.badImplementation("Unable to generate password hash"));
   }
 
   let user;
@@ -52,17 +55,12 @@ router.post("/register", async (req, res, next) => {
   try {
     refreshToken = createNewForUser(user);
   } catch (e) {
-    console.error(e);
     return next(
       Boom.badImplementation("Could not update refresh token for user")
     );
   }
 
-  res.cookie("refreshToken", refreshToken.refresh_token, {
-    maxAge: 60 * 24 * 30 * 60 * 1000, // convert from minute to milliseconds
-    httpOnly: true,
-    secure: true,
-  });
+  res.cookie("refreshToken", refreshToken.refresh_token);
 
   // return jwt token and refresh token to client
   res.json({
@@ -93,14 +91,13 @@ router.post("/login", async (req, res, next) => {
   try {
     user = await User.findOne({ name: name }).orFail();
   } catch (e) {
-    return next(Boom.unauthorized("Unable to find 'user'"));
+    return next(Boom.unauthorized("Unable to find a user with that name"));
   }
 
   // see if password hashes matches
   const match = await bcrypt.compare(password, user.password);
 
   if (!match) {
-    console.error("Password does not match");
     return next(Boom.unauthorized("Invalid username or password"));
   }
 
@@ -113,19 +110,13 @@ router.post("/login", async (req, res, next) => {
   try {
     refreshToken = createNewForUser(user);
   } catch (e) {
-    console.error(e);
     return next(
       Boom.badImplementation("Could not update refresh token for user")
     );
   }
 
-  res.cookie("refreshToken", refreshToken.refresh_token, {
-    maxAge: 60 * 24 * 30 * 60 * 1000, // convert from minute to milliseconds
-    httpOnly: true,
-    secure: true,
-  });
+  res.cookie("refreshToken", refreshToken.refresh_token, config.get("cookie"));
 
-  // return jwt token and refresh token to client
   res.json({
     jwToken,
     jwTokenExpiry,
@@ -135,12 +126,10 @@ router.post("/login", async (req, res, next) => {
 router.post("/refresh-token", async (req, res, next) => {
   const refresh_token = req.cookies["refreshToken"];
 
-  let oldRefreshToken;
-  try {
-    oldRefreshToken = await RefreshToken.findOne({ refresh_token }).orFail();
-  } catch (e) {
+  const oldRefreshToken = await RefreshToken.findOne({ refresh_token });
+
+  if (!oldRefreshToken)
     return next(Boom.unauthorized("Invalid refresh token request"));
-  }
 
   const user = await User.findById(oldRefreshToken.user_id);
 
@@ -150,18 +139,14 @@ router.post("/refresh-token", async (req, res, next) => {
     await RefreshToken.findOneAndDelete({ user_id: user.id });
     refreshToken = createNewForUser(user);
   } catch (e) {
-    return next(Boom.unauthorized("Invalid 'refresh_token' or 'user_id'"));
+    return next(Boom.unauthorized("Invalid refresh_token or 'user_id'"));
   }
 
   // generate new jwt token
   const jwToken = user.generateAuthToken();
   const jwTokenExpiry = new Date(new Date().getTime() + 15 * 60 * 1000);
 
-  res.cookie("refreshToken", refreshToken.refresh_token, {
-    maxAge: 60 * 24 * 30 * 60 * 1000,
-    httpOnly: true,
-    secure: true,
-  });
+  res.cookie("refreshToken", refreshToken.refresh_token, config.get("cookie"));
 
   res.json({
     jwToken,

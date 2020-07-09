@@ -2,10 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
+import { JwtProvider } from "./contexts/JwtContext";
+import { UserProvider } from "./contexts/UserContext";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <UserProvider>
+      <JwtProvider>
+        <App />
+      </JwtProvider>
+    </UserProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

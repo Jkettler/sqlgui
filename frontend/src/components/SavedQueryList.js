@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from "react";
-import Accordion from "react-bootstrap/Accordion";
-import Card from "react-bootstrap/Card";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import ListGroup from "react-bootstrap/ListGroup";
-import NavBar from "react-bootstrap/NavBar";
-import InputGroup from "react-bootstrap/InputGroup";
-import Form from "react-bootstrap/Form";
+import {
+  Spinner,
+  Accordion,
+  Card,
+  Row,
+  Col,
+  Navbar,
+  ListGroup,
+  InputGroup,
+  Form,
+} from "react-bootstrap";
+
 import NoFocusButton from "./NoFocusButton";
 import queryService from "../util/queryService";
+import { useJwt } from "../contexts/JwtContext";
+import { useUser } from "../contexts/UserContext";
 
 const SavedQueryList = ({
   localQueries,
@@ -16,12 +22,13 @@ const SavedQueryList = ({
   savedQueries,
   setSavedQueries,
   setActiveQuery,
-  jwt,
-  user,
 }) => {
   const [deleteMode, setDeleteMode] = useState(false);
   const [willDelete, setWillDelete] = useState([]);
   const [combinedQueries, setCombinedQueries] = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const { jwt } = useJwt();
+  const { user } = useUser();
 
   useEffect(() => {
     setCombinedQueries(savedQueries.concat(localQueries));
@@ -29,6 +36,7 @@ const SavedQueryList = ({
 
   const syncList = (e) => {
     e.stopPropagation();
+    setSyncing(true);
 
     queryService.query
       .sync(localQueries, jwt.jwToken)
@@ -38,6 +46,7 @@ const SavedQueryList = ({
       .catch((e) => console.log(`Sync error ${e}`))
       .then(() => {
         setLocalQueries([]);
+        setSyncing(false);
       });
   };
 
@@ -109,16 +118,27 @@ const SavedQueryList = ({
         <Card>
           <Accordion.Toggle as={Card.Header} eventKey="0">
             <Row>
-              <NavBar className={"justify-content-end"}>
-                <NavBar.Text>
+              <Navbar className={"justify-content-end"}>
+                <Navbar.Text>
                   {`Known Queries (${combinedQueries.length || 0})`}
-                </NavBar.Text>
-              </NavBar>
+                </Navbar.Text>
+              </Navbar>
               {user && (
-                <NavBar className={"flex-grow-1 justify-content-end"}>
+                <Navbar className={"flex-grow-1 justify-content-end"}>
                   <Form inline>
                     <InputGroup>
-                      <NoFocusButton onClick={syncList}>Save All</NoFocusButton>
+                      <NoFocusButton onClick={syncList}>
+                        {syncing ? (
+                          <Spinner
+                            as="span"
+                            animation="grow"
+                            variant="primary"
+                            size="sm"
+                          />
+                        ) : (
+                          <span>Save All</span>
+                        )}
+                      </NoFocusButton>
                       <NoFocusButton
                         onClick={
                           willDelete.length && deleteMode
@@ -133,7 +153,7 @@ const SavedQueryList = ({
                       </NoFocusButton>
                     </InputGroup>
                   </Form>
-                </NavBar>
+                </Navbar>
               )}
             </Row>
           </Accordion.Toggle>

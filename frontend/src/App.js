@@ -1,44 +1,50 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+
+// React Bootstrap Imports
 import "bootstrap/dist/css/bootstrap.min.css";
-import FormControl from "react-bootstrap/FormControl";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Jumbotron from "react-bootstrap/Jumbotron";
-import Alert from "react-bootstrap/Alert";
+import {
+  Container,
+  Form,
+  FormControl,
+  InputGroup,
+  ButtonGroup,
+  Row,
+  Col,
+  Jumbotron,
+  Alert,
+} from "react-bootstrap";
+
 import ResultsTable from "./components/ResultsTable";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
-import Form from "react-bootstrap/Form";
-import InputGroup from "react-bootstrap/InputGroup";
 import AuthModal from "./components/AuthModal";
 import SavedQueryList from "./components/SavedQueryList";
 import { withAuthSync } from "./HOCs/withAuthSync";
 import NoFocusButton from "./components/NoFocusButton";
 import queryService from "./util/queryService";
+import { useUser } from "./contexts/UserContext";
 
-const App = (props) => {
-  const { user, login, logout, jwt } = props;
+const App = ({ logout }) => {
+  const { user } = useUser();
 
   const [queryError, setQueryError] = useState(null);
   const [networkError, setNetworkError] = useState(null);
   const [results, setResults] = useState(null);
 
   const [activeQuery, setActiveQuery] = useState({ query: "", name: "" });
-  const [savedQueries, setSavedQueries] = useState([]);
+  const [savedQueries, setSavedQueries] = useState(user ? user.queries : []);
   const [localQueries, setLocalQueries] = useState([]);
 
   useEffect(() => {
-    if (user) {
-      setSavedQueries(user.queries);
-    } else {
-      setSavedQueries([]);
-    }
+    if (user) setSavedQueries(user.queries);
+    else setSavedQueries([]);
+
+    return () => setSavedQueries([]);
   }, [user]);
 
   const executeQuery = () => {
     setResults(null);
     setQueryError(null);
+
     queryService.query
       .execute(activeQuery)
       .then((res) => {
@@ -78,6 +84,13 @@ const App = (props) => {
     }
   };
 
+  const showList = () => {
+    return (
+      (localQueries && localQueries.length > 0) ||
+      (savedQueries && savedQueries.length > 0)
+    );
+  };
+
   return (
     <div className="App">
       <Container className={"MainContainer"} fluid="xl">
@@ -89,18 +102,17 @@ const App = (props) => {
           {user ? (
             <NoFocusButton onClick={logout}>Logout</NoFocusButton>
           ) : (
-            <AuthModal login={login} />
+            <AuthModal />
           )}
         </Jumbotron>
         <Row>
-          {(!!localQueries.length || !!savedQueries.length) && (
+          {showList() && (
             <SavedQueryList
               setActiveQuery={setActiveQuery}
               localQueries={localQueries}
               setLocalQueries={setLocalQueries}
               savedQueries={savedQueries}
               setSavedQueries={setSavedQueries}
-              jwt={jwt}
               user={user}
             />
           )}

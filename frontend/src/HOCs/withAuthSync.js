@@ -1,42 +1,39 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState,
-} from "react";
+import React, { useEffect } from "react";
+import { useUser } from "../contexts/UserContext";
+import { useJwt } from "../contexts/JwtContext";
 
 import { subMinutes } from "../util/sharedStaticHelpers";
 import userService from "../util/userService";
 
 const withAuthSync = (WrappedComponent) => ({ ...props }) => {
-  const [jwt, setJwt] = useState(null);
-  const [user, setUser] = useState(null);
+  const { jwt, setJwt } = useJwt();
+  const { user, setUser } = useUser();
 
   const logout = () => {
     if (jwt)
-      userService.auth.userLogout(jwt.jwToken).then((res) => {
-        setUser(null);
+      userService.auth.userLogout(jwt.jwToken).then(() => {
         setJwt(null);
-        return res;
+        setUser(null);
       });
   };
 
-  const login = useCallback(
-    (token) => {
-      if (token && !user)
-        userService.auth.currentUser(token.jwToken).then((res) => {
+  useEffect(() => {
+    if (jwt && !user) {
+      userService.auth
+        .currentUser(jwt.jwToken)
+        .then((res) => {
           setUser(res.data);
-          setJwt(token);
-        });
-    },
-    [user]
-  );
+        })
+        .catch(() => setUser(null));
+    }
+  }, [setUser, jwt, user]);
+
+  // Load user immediately on initial render, if possible
+  useEffect(() => {
+    userService.auth.refreshToken(setJwt).then(() => Promise.resolve());
+  }, [setJwt]);
 
   useEffect(() => {
-    userService.auth.refreshToken().then((token) => login(token.data));
-  }, []);
-
-  useLayoutEffect(() => {
     const interval = setInterval(async () => {
       if (jwt) {
         if (
@@ -44,27 +41,17 @@ const withAuthSync = (WrappedComponent) => ({ ...props }) => {
           new Date(jwt.jwTokenExpiry)
         ) {
           setJwt(null);
-          setJwt(await userService.auth.refreshToken());
+          await userService.auth.refreshToken(setJwt, interval);
         }
       } else {
-        setJwt(await userService.auth.refreshToken());
+        await userService.auth.refreshToken(setJwt, interval);
       }
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [jwt]);
+  }, [setJwt, jwt]);
 
-  return (
-    <WrappedComponent
-      jwt={jwt}
-      setJwt={setJwt}
-      logout={logout}
-      user={user}
-      login={login}
-    >
-      {props.children}
-    </WrappedComponent>
-  );
+  return <WrappedComponent logout={logout}>{props.children}</WrappedComponent>;
 };
 
 export { withAuthSync };
