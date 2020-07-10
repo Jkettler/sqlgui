@@ -113,7 +113,6 @@ const App = ({ logout }) => {
               setLocalQueries={setLocalQueries}
               savedQueries={savedQueries}
               setSavedQueries={setSavedQueries}
-              user={user}
             />
           )}
 

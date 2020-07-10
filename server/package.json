@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "debug": "DEBUG=server:* npm start"
+    "debug": "DEBUG=server:* npm start",
+    "devdebug": "NODE_ENV=development DEBUG=server:* npm start"
   },
   "dependencies": {
     "@hapi/boom": "^9.1.0",

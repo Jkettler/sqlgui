@@ -40,7 +40,7 @@ mongoose
   .catch((err) => console.error("Could not connect to MongoDB..."));
 
 const origin =
-  process.env.NODE_ENV === "production" ? "originProd" : "originDev";
+  process.env.NODE_ENV === "development" ? "originDev" : "originProd";
 
 app.use(cors({ credentials: true, origin: config.get(origin) }));
 
@@ -52,12 +52,10 @@ app.use(cookieParser());
 const query = require("./routes/query.route");
 const auth = require("./routes/auth.route");
 const user = require("./routes/user.route");
-// const userQueries = require("./routes/user_queries.route");
 
 app.use("/api/auth", auth);
 app.use("/api/user", user);
 app.use("/api/query", query);
-// app.use("/api/user_queries", userQueries);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
