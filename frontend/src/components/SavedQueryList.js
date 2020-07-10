@@ -67,6 +67,10 @@ const SavedQueryList = ({
       setLocalQueries((prev) =>
         prev.filter((_, index) => localToDelete.includes(index))
       );
+      if (!savedToDelete.length) {
+        setDeleteMode(false);
+        setWillDelete([]);
+      }
     }
 
     if (savedToDelete.length) {

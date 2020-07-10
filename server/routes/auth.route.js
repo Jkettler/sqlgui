@@ -72,6 +72,7 @@ router.post("/register", async (req, res, next) => {
 router.post("/logout", auth, async (req, res, next) => {
   res.cookie("refreshToken", "", {
     httpOnly: true,
+    sameSite: "strict",
     expires: new Date(0),
   });
   res.send("OK");
