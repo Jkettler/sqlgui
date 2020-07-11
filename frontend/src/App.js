@@ -144,6 +144,7 @@ const App = ({ logout }) => {
               <FormControl
                 as="textarea"
                 size="lg"
+                rows="10"
                 name="query"
                 value={activeQuery.query || ""}
                 placeholder="Enter a SQLite Query"
