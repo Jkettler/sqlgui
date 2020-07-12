@@ -10,6 +10,7 @@ The library used to manage this can be found here: https://github.com/sql-js/sql
 Although everyone can save queries to a list, these are stored in app memory and will be lost when the page is left or refreshed. To persist queries, people can make an account if they'd like.
 
 I wanted to learn about modern auth techniques beyond session cookies (specifically using JWT), so I took a deep dive here that and implemented a JWT/Refresh token approach largely inspired by: https://hasura.io/blog/best-practices-of-using-jwt-with-graphql/
+
 Authenticated users' data and their saved queries are stored in a mongodb store running on the same machine. 
 
 It is deployed on an AWS EC2 free-tier instance.
@@ -56,7 +57,7 @@ Connected to MongoDB...
 ``` 
 you're good to go.
 
-5.Now that the server is running,  `cd` to `sqlgui/frontend` and run `yarn install`, then `yarn start`
+6. Now that the server is running,  `cd` to `sqlgui/frontend` and run `yarn install`, then `yarn start`
 
 Head over to localhost:3000 and check it out.
 
