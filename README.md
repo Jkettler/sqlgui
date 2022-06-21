@@ -50,7 +50,7 @@ It is deployed on an AWS EC2 free-tier instance.
 }
 ```
 4. Make sure mongo daemon is running on your local computer. Try `brew services ls` and check the status (if you installed mongo with Homebrew)
-5. From the  `sqlgui/server/` directory, run `yarn install` and then `yarn devdebug`. If you you see 
+5. From the  `sqlgui/server/` directory, run `yarn install` and then `yarn devdebug`. If you see 
 ```
   server:server Listening on port 9000 +0ms
 Connected to MongoDB...
@@ -63,10 +63,8 @@ Head over to localhost:3000 and check it out.
 
 
 ## Next steps
-- TLS for properly handled login forms
-- Tests(!!)
+- TLS for properly secure login forms
 - Separate mongo to a container of its own
 - Implement proper refresh token invalidation ( see: https://hasura.io/blog/best-practices-of-using-jwt-with-graphql/#logout_token_invalidation )
 - SQLite Write access restrictions and/or restart the server periodically (or automatically) to reset it to pristine state
 - Saved query list reordering
-- CAPTCHA or some other auth rate limiter
