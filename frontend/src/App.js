@@ -11,7 +11,6 @@ import {
   ButtonGroup,
   Row,
   Col,
-  Jumbotron,
   Alert,
 } from "react-bootstrap";
 
@@ -94,7 +93,7 @@ const App = ({ logout }) => {
   return (
     <div className="App">
       <Container className={"MainContainer"} fluid="xl">
-        <Jumbotron>
+        <div className="p-5 mb-4 bg-light rounded-3">
           <Container>
             <h1>Learn You a SQL For Great Good</h1>
             {user && <h3>{`Welcome back ${user.name}!`}</h3>}
@@ -104,7 +103,7 @@ const App = ({ logout }) => {
           ) : (
             <AuthModal />
           )}
-        </Jumbotron>
+        </div>
         <Row>
           {showList() && (
             <SavedQueryList
@@ -127,16 +126,15 @@ const App = ({ logout }) => {
                   value={activeQuery.name}
                   onChange={onActiveQueryChange}
                 />
-                <InputGroup.Append>
-                  <NoFocusButton
-                    disabled={
-                      !activeQuery.name.length || !activeQuery.query.length
-                    }
-                    onClick={addOrUpdateLocalQuery}
-                  >
-                    +
-                  </NoFocusButton>
-                </InputGroup.Append>
+
+                <NoFocusButton
+                  disabled={
+                    !activeQuery.name.length || !activeQuery.query.length
+                  }
+                  onClick={addOrUpdateLocalQuery}
+                >
+                  +
+                </NoFocusButton>
               </InputGroup>
             </Form.Group>
 

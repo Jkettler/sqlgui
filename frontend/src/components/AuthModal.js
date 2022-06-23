@@ -7,6 +7,7 @@ import {
   ButtonGroup,
   ToggleButton,
   Spinner,
+  ToggleButtonGroup,
 } from "react-bootstrap";
 
 import authService from "../util/authService";
@@ -99,12 +100,12 @@ const AuthModal = () => {
   };
 
   const authOptions = [
-    { name: "Login", value: "login" },
-    { name: "Sign Up", value: "register" },
+    { label: "Login", value: "login" },
+    { label: "Sign Up", value: "register" },
   ];
 
   const modalTitle = formAction === "login" ? "Login" : "Sign Up";
-
+  console.log("formAction: ", formAction);
   return (
     <JwtProvider>
       <NoFocusButton variant="primary" onClick={handleShow}>
@@ -112,21 +113,21 @@ const AuthModal = () => {
       </NoFocusButton>
 
       <Modal show={show} centered onHide={handleClose} animation={false}>
-        <ButtonGroup toggle className="AuthModalToggle">
+        <ToggleButtonGroup name="auth-type-toggle" className="AuthModalToggle">
           {authOptions.map((radio, idx) => (
             <ToggleButton
               key={idx}
               type="radio"
-              variant="info"
-              name="radio"
+              name="auth-type-toggle"
+              id={`auth-opt-${idx}`}
               value={radio.value}
               checked={formAction === radio.value}
               onChange={(e) => setFormAction(e.currentTarget.value)}
             >
-              {radio.name}
+              {radio.label}
             </ToggleButton>
           ))}
-        </ButtonGroup>
+        </ToggleButtonGroup>
 
         <Container fluid>
           <Modal.Dialog>
@@ -140,6 +141,7 @@ const AuthModal = () => {
                   <Form.Control
                     type="text"
                     name="name"
+                    autoComplete="off"
                     value={name}
                     onChange={handleChange}
                     isInvalid={submitted && !name}
@@ -153,6 +155,7 @@ const AuthModal = () => {
                   <Form.Control
                     type="password"
                     name="password"
+                    autoComplete="off"
                     value={password}
                     onChange={handleChange}
                     isInvalid={submitted && !password}
